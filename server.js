@@ -124,12 +124,20 @@ app.route('/api/rooms/:name/queue')
   ;
 
 app.sockets.on('connection', function(socket) {
-  events.on('add', function(song) {
-    app.sockets.emit('add', song);
-  });
+  var add = function(song) {
+        app.sockets.emit('add', song);
+      }
+    , remove = function(id) {
+        app.sockets.emit('remove', id);
+      }
+    ;
 
-  events.on('remove', function(id) {
-    app.sockets.emit('remove', id);
+  events.on('add', add);
+  events.on('remove', remove);
+
+  socket.on('disconnect', function() {
+    events.removeListener('add', add);
+    events.removeListener('remove', remove);
   });
 });
 
