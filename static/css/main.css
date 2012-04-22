@@ -1,0 +1,59 @@
+body {
+  margin: 20px 0;
+}
+
+#title {
+  margin-bottom: 20px;
+}
+
+#title h1 {
+  font-size: 36px;
+}
+
+#title p {
+  color: rgb (120, 120, 120);
+}
+
+.menu .room-choice {
+  width: 300px;
+  margin-bottom: 0;
+}
+
+.menu .rooms-list {
+  margin: 10px 20px;
+  padding: 0;
+}
+
+.menu .rooms-list li {
+  margin-bottom: 10px;
+}
+
+.player-area #player-cont {
+  padding: 10px 0 30px 0;
+}
+
+.player-area .play {
+  font-size: 20px;
+}
+
+.search {
+  margin-top: 20px;
+}
+
+.search .query {
+  width: 300px;
+  margin-bottom: 0;
+}
+
+.search .results-list {
+  list-style: none;
+  margin: 0;
+}
+
+.search .results-list li {
+  margin-top: 20px;
+}
+
+.search .results-list li .link {
+  font-size: 16px;
+}

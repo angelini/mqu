@@ -32,6 +32,11 @@ var app = {
       });
     }
 
+  , maxLength: function(string, length) {
+      if (string.length <= length) { return string; }
+      return string.substr(0, length - 3) + '...';
+    }
+
   , join: function(name) {
       var Search = app.module('search')
         , searchCollection = new Search.Collection()
@@ -101,7 +106,7 @@ var app = {
         if (player) { player.playVideo(); }
       };
 
-      swfobject.embedSWF(url, 'player-cont', '425', '356', '8', null, null, params, atts);
+      swfobject.embedSWF(url, 'player-cont', '640', '390', '8', null, null, params, atts);
     }
   });
 
@@ -170,16 +175,19 @@ var app = {
   });
 
   Player.CollectionView = Backbone.View.extend({
-      events: {
+      className: 'player-area span12'
+
+    , events: {
         'click .play': 'play'
       }
 
-    , play: function() {
+    , play: function(ev) {
+        ev.preventDefault();
         this.collection.play();
       }
 
     , renderList: function() {
-        var $list = this.$el.find('ul');
+        var $list = this.$el.find('ol');
 
         $list.empty();
 
@@ -187,6 +195,10 @@ var app = {
           var view = new Player.View({model: model});
           $list.append(view.render().el);
         });
+
+        if (this.collection.length === 0) {
+          $list.append('<div>Queue currently empty</div>');
+        }
       }
 
     , render: function() {
@@ -256,11 +268,14 @@ var app = {
   });
 
   Menu.CollectionView = Backbone.View.extend({
-      events: {
-        'click .create': 'create'
+      className: 'menu span12'
+
+    , events: {
+        'submit .create': 'create'
       }
 
-    , create: function() {
+    , create: function(ev) {
+        ev.preventDefault();
         var name = this.$el.find('input').val();
         if (name) { this.collection.create(name); }
       }
@@ -326,9 +341,15 @@ var app = {
 
       $.getJSON(url , function(results) {
         models = _.map(results.feed.entry, function(entry) {
+          var vid = entry.id.$t.split(':').pop()
+            , description = app.maxLength(entry.media$group.media$description.$t, 200)
+            ;
+
           return new Search.Model({
               title: entry.title.$t
-            , url: 'http://youtube.com/v/' + entry.id.$t.split(':').pop()
+            , url: 'http://youtube.com/v/' + vid
+            , thumbnail: 'http://i.ytimg.com/vi/' + vid + '/default.jpg'
+            , description: description
           });
         });
 
@@ -338,7 +359,7 @@ var app = {
   });
 
   Search.CollectionView = Backbone.View.extend({
-      className: 'search'
+      className: 'search span12'
 
     , events: {
         'submit .search-field': 'search'

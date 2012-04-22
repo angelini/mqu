@@ -1,20 +1,29 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <title>mQu</title>
     <link href="/static/css/bootstrap.css" rel="stylesheet" type="text/css"/>
+    <link href="/static/css/main.css" rel="stylesheet" type="text/css"/>
   </head>
-  <body>
-    <div id="title">
-      <h1>mQu</h1>
+  <body class="container">
+    <div id="title" class="row">
+      <div class="span12">
+        <h1>mQu</h1>
+        <p>Plain and Simple Music Queueing</p>
+      </div>
     </div>
-    <div id="main"></div>
+    <div id="main" class="row"></div>
 
     <script id="menu-tmpl" type="text/template">
-      <input type="text" placeholder="Room Name"/>
-      <button class="create btn">Create</button>
-      <ul></ul>
+      <form class="create">
+        <input class="room-choice" type="text" placeholder="Room Name"/>
+        <input type="submit" class="btn" value="Create"/>
+      </form>
+      <div class="rooms">
+        <h3>Current Open Rooms</h3>
+        <ul class="rooms-list"></ul>
+      </div>
     </script>
 
     <script id="room-tmpl" type="text/template">
@@ -23,25 +32,37 @@
 
     <script id="search-tmpl" type="text/template">
       <form class="search-field">
-        <input type="text" placeholder="Song Search"/>
+        <input class="query" type="text" placeholder="Song Query"/>
+        <input type="submit" class="btn" value="Search"/>
       </form>
-      <ul class="results"></ul>
+      <div class="results">
+        <ul class="results-list"></ul>
+      </div>
     </script>
 
     <script id="result-tmpl" type="text/template">
-      <a href="{{url}}">{{title}}</a><button class="btn">Add</button>
+      <div class="row">
+        <a class="span6 link" href="{{url}}" target="_blank">{{title}}</a>
+        <button class="btn span1">Add</button>
+      </div>
+      <div class="row">
+        <img src="{{thumbnail}}" class="span2" alt="thumbnail"/>
+        <div class="span4 offset1">{{description}}</div>
+      </div>
     </script>
 
     <script id="queue-tmpl" type="text/template">
       <div id="player-cont">
-        <div>Player Goers Here</div>
-        <button class="play">Start</button>
+        <a href="#" class="play">Start The Player</a>
       </div>
-      <ul></ul>
+      <div class="queue">
+        <h3>Queue</h3>
+        <ol class="queue-list"></ol>
+      </div>
     </script>
 
     <script id="song-tmpl" type="text/template">
-      <div>{{title}} -- {{url}}</div>
+      <div>{{title}}</div>
     </script>
 
     <script src="/socket.io/socket.io.js"></script>
