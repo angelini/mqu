@@ -7,9 +7,13 @@ var tako = require('tako')
   , Events = require('events')
 
   , events = new Events.EventEmitter()
-  , db = redis.createClient()
+  , db = redis.createClient(config.REDIS_PORT, config.REDIS_HOST)
   , app = tako({ socketio: { 'log level': 1 } })
   ;
+
+if (process.env.NODE_ENV != 'dev') {
+  db.auth(config.REDIS_PASS);
+}
 
 var sendErr = function(err, res, code) {
   res.statusCode = code || 500;
