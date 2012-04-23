@@ -64,7 +64,7 @@ var app = {
 
   , create: function(name) {
       app.api('rooms', 'POST', {name: name}, function() {
-        app.join(name);
+        app.router.navigate('rooms/' + name, {trigger: true});
       });
     }
 

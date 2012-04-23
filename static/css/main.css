@@ -57,3 +57,8 @@ body {
 .search .results-list li .link {
   font-size: 16px;
 }
+
+#footer {
+  margin-top: 100px;
+  font-size: 12px;
+}
