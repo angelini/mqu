@@ -126,7 +126,9 @@ var app = {
   });
 
   Player.Collection = Backbone.Collection.extend({
-      fetch: function() {
+      playing: false
+
+    , fetch: function() {
         var that = this
           , url = 'rooms/' + app.room + '/queue'
           ;
@@ -146,15 +148,21 @@ var app = {
           , url = 'rooms/' + app.room + '/queue'
           ;
 
+        this.playing = true;
+
         if (!song) {
-          console.log('Playlist finished');
+          this.playing = false;
+          app.socket.emit('release');
+          this.emit('finished');
           return;
         }
 
         song.on('finished', this.play);
-        song.play();
 
         app.api(url, 'DELETE', null, function() {});
+        app.socket.emit('master', app.room);
+
+        song.play();
       }
 
     , initialize: function() {
@@ -171,6 +179,19 @@ var app = {
           var model = that.get(id);
           that.remove(model);
         });
+
+        app.socket.on('master', function(master) {
+          if (!that.playing && app.room == master.room) {
+            that.trigger('locked');
+          }
+        });
+
+        app.socket.on('release', function(master) {
+          console.log('release ran', master);
+          if (app.room == master.room) {
+            that.trigger('released');
+          }
+        });
       }
   });
 
@@ -179,6 +200,16 @@ var app = {
 
     , events: {
         'click .play': 'play'
+      }
+
+    , lock: function() {
+        var html = $('#locked-tmpl').html();
+        this.$el.find('#player-cont').html(html);
+      }
+
+    , release: function() {
+        var html = $('<div></div>').append(this.template).find('#player-cont').html();
+        this.$el.find('#player-cont').html(html);
       }
 
     , play: function(ev) {
@@ -210,8 +241,13 @@ var app = {
     , initialize: function() {
         _.bindAll(this);
         this.template = $('#queue-tmpl').html();
+
+        this.collection.on('finished', this.release);
+        this.collection.on('released', this.release);
+
         this.collection.on('add', this.renderList);
         this.collection.on('remove', this.renderList);
+        this.collection.on('locked', this.lock);
       }
   });
 

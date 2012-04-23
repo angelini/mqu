@@ -130,14 +130,34 @@ app.sockets.on('connection', function(socket) {
     , remove = function(id) {
         app.sockets.emit('remove', id);
       }
+    , release = function() {
+        socket.get('master', function(err, room) {
+          if (room) {
+            app.sockets.emit('release', { room: room });
+            db.del(cat(config.ROOMS, room, config.LOCK), function() {});
+          }
+        });
+      }
     ;
 
   events.on('add', add);
   events.on('remove', remove);
 
+  socket.on('master', function(room) {
+    db.getset(cat(config.ROOMS, room, config.LOCK), 1, function(err, locked) {
+      if (!locked) {
+        app.sockets.emit('master', { room: room });
+        socket.set('master', room, function() {});
+      }
+    });
+  });
+
+  socket.on('release', release);
+
   socket.on('disconnect', function() {
     events.removeListener('add', add);
     events.removeListener('remove', remove);
+    release();
   });
 });
 
