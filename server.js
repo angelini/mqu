@@ -158,7 +158,7 @@ app.sockets.on('connection', function(socket) {
   socket.on('master', function(room) {
     db.getset(cat(config.ROOMS, room, config.LOCK), 1, function(err, locked) {
       if (!locked) {
-        app.sockets.emit('master', { room: room });
+        app.sockets.emit('locked', { room: room });
         socket.set('master', room, function() {});
       }
     });

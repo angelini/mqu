@@ -6,12 +6,18 @@ body {
   margin-bottom: 20px;
 }
 
-#title h1 {
+#title h1 a {
   font-size: 36px;
+  color: rgb(30, 30, 30);
+  text-decoration: none;
+}
+
+#title h1 a:hover {
+  color: rgb(120, 120, 120);
 }
 
 #title p {
-  color: rgb (120, 120, 120);
+  color: rgb(120, 120, 120);
 }
 
 .menu .room-choice {

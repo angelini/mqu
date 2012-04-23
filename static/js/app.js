@@ -185,15 +185,14 @@ var app = {
           that.remove(model);
         });
 
-        app.socket.on('master', function(master) {
+        app.socket.on('locked', function(master) {
           if (!that.playing && app.room == master.room) {
-            this.locked = true;
+            that.locked = true;
             that.trigger('locked');
           }
         });
 
         app.socket.on('release', function(master) {
-          console.log('release ran', master);
           if (app.room == master.room) {
             that.locked = false;
             that.trigger('released');
@@ -215,6 +214,7 @@ var app = {
       }
 
     , renderPlayerCont: function() {
+        console.log('render player cont', this);
         if (this.collection.locked) {
           this.$el.find('#player-cont').html(this.lockedTmpl);
         } else {
@@ -249,12 +249,12 @@ var app = {
         this.playerCont = $('#player-cont-tmpl').html();
         this.lockedTmpl = $('#locked-tmpl').html();
 
-        this.collection.on('finished', this.renderPlayerCount);
-        this.collection.on('released', this.renderPlayerCount);
+        this.collection.on('finished', this.renderPlayerCont);
+        this.collection.on('released', this.renderPlayerCont);
+        this.collection.on('locked', this.renderPlayerCont);
 
         this.collection.on('add', this.renderList);
         this.collection.on('remove', this.renderList);
-        this.collection.on('locked', this.renderPlayerCount);
       }
   });
 
