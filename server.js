@@ -88,7 +88,7 @@ app.route('/api/rooms/:name/queue')
           function(cb) { db.get(cat(config.ROOMS, req.params.name, config.LOCK), cb); }
         , function(lock, cb) {
             if (lock) { roomlock = true; }
-            db.lrange(cat(config.QUEUE, req.params.name), 0, -1, cb); 
+            db.lrange(cat(config.QUEUE, req.params.name), 0, -1, cb);
           }
         , function(ids, cb) {
             async.map(ids, function(id, cb) { db.hgetall(cat(config.SONG, id), cb); }, cb);
@@ -118,10 +118,17 @@ app.route('/api/rooms/:name/queue')
     }
 
     if (req.method == 'DELETE') {
-      db.lpop(cat(config.QUEUE, req.params.name), function(err, id) {
-        if (err) { return sendErr(err, res); }
-        events.emit('remove', id);
-        res.end();
+      var songid;
+      async.waterfall([
+          function(cb) { db.lpop(cat(config.QUEUE, req.params.name), cb); }
+        , function(id, cb) {
+            songid = id;
+            db.del(cat(config.SONG, id), cb);
+          }
+        ], function(err) {
+          if (err) { return sendErr(err, res); }
+          events.emit('remove', songid);
+          res.end();
       });
     }
   })
