@@ -264,7 +264,7 @@ var app = {
 
   Menu.Model = Backbone.Model.extend({
     join: function() {
-      app.join(this.get('name'));
+      app.router.navigate('rooms/' + this.get('name'), {trigger: true});
     }
   });
 
@@ -437,11 +437,16 @@ var app = {
 jQuery(function($) {
   var Router = Backbone.Router.extend({
       routes: {
-        '': 'init'
+          '': 'init'
+        , 'rooms/:name': 'join'
       }
 
     , init: function() {
         app.init();
+      }
+
+    , join: function(name) {
+        app.join(name);
       }
   });
 
