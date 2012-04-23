@@ -83,14 +83,19 @@ app.route('/api/rooms/:name')
 app.route('/api/rooms/:name/queue')
   .json(function(req, res) {
     if (req.method == 'GET') {
+      var roomlock = false;
       async.waterfall([
-          function(cb) { db.lrange(cat(config.QUEUE, req.params.name), 0, -1, cb); }
+          function(cb) { db.get(cat(config.ROOMS, req.params.name, config.LOCK), cb); }
+        , function(lock, cb) {
+            if (lock) { roomlock = true; }
+            db.lrange(cat(config.QUEUE, req.params.name), 0, -1, cb); 
+          }
         , function(ids, cb) {
             async.map(ids, function(id, cb) { db.hgetall(cat(config.SONG, id), cb); }, cb);
           }
       ], function(err, songs) {
         if (err) { return sendErr(err, res); }
-        res.end(songs);
+        res.end({songs: songs, lock: roomlock});
       });
     }
 

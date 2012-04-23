@@ -128,13 +128,17 @@ var app = {
   Player.Collection = Backbone.Collection.extend({
       playing: false
 
+    , locked: false
+
     , fetch: function() {
         var that = this
           , url = 'rooms/' + app.room + '/queue'
           ;
 
-        app.api(url, 'GET', null, function(songs) {
-          var models = _.map(songs, function(song) {
+        app.api(url, 'GET', null, function(info) {
+          that.locked = info.lock;
+
+          var models = _.map(info.songs, function(song) {
             return new Player.Model(song);
           });
 
@@ -152,6 +156,7 @@ var app = {
 
         if (!song) {
           this.playing = false;
+          this.locked = false;
           app.socket.emit('release');
           this.emit('finished');
           return;
@@ -182,6 +187,7 @@ var app = {
 
         app.socket.on('master', function(master) {
           if (!that.playing && app.room == master.room) {
+            this.locked = true;
             that.trigger('locked');
           }
         });
@@ -189,6 +195,7 @@ var app = {
         app.socket.on('release', function(master) {
           console.log('release ran', master);
           if (app.room == master.room) {
+            that.locked = false;
             that.trigger('released');
           }
         });
@@ -202,24 +209,21 @@ var app = {
         'click .play': 'play'
       }
 
-    , lock: function() {
-        var html = $('#locked-tmpl').html();
-        this.$el.find('#player-cont').html(html);
-      }
-
-    , release: function() {
-        var html = $('<div></div>').append(this.template).find('#player-cont').html();
-        this.$el.find('#player-cont').html(html);
-      }
-
     , play: function(ev) {
         ev.preventDefault();
         this.collection.play();
       }
 
+    , renderPlayerCont: function() {
+        if (this.collection.locked) {
+          this.$el.find('#player-cont').html(this.lockedTmpl);
+        } else {
+          this.$el.find('#player-cont').html(this.playerCont);
+        }
+      }
+
     , renderList: function() {
         var $list = this.$el.find('ol');
-
         $list.empty();
 
         this.collection.each(function(model) {
@@ -234,6 +238,7 @@ var app = {
 
     , render: function() {
         this.$el.html(this.template);
+        this.renderPlayerCont();
         this.renderList();
         return this;
       }
@@ -241,13 +246,15 @@ var app = {
     , initialize: function() {
         _.bindAll(this);
         this.template = $('#queue-tmpl').html();
+        this.playerCont = $('#player-cont-tmpl').html();
+        this.lockedTmpl = $('#locked-tmpl').html();
 
-        this.collection.on('finished', this.release);
-        this.collection.on('released', this.release);
+        this.collection.on('finished', this.renderPlayerCount);
+        this.collection.on('released', this.renderPlayerCount);
 
         this.collection.on('add', this.renderList);
         this.collection.on('remove', this.renderList);
-        this.collection.on('locked', this.lock);
+        this.collection.on('locked', this.renderPlayerCount);
       }
   });
 

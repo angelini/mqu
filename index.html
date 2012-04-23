@@ -15,11 +15,6 @@
     </div>
     <div id="main" class="row"></div>
 
-    <script id="locked-tmpl" type="text/template">
-      <h3>Songs Being Played On Another Computer</h3>
-      <p>Feel free to add songs to the queue</p>
-    </script>
-
     <script id="menu-tmpl" type="text/template">
       <form class="create">
         <input class="room-choice" type="text" placeholder="Room Name"/>
@@ -56,10 +51,17 @@
       </div>
     </script>
 
+    <script id="locked-tmpl" type="text/template">
+      <h3>Songs Being Played On Another Computer</h3>
+      <p>Feel free to add songs to the queue</p>
+    </script>
+
+    <script id="player-cont-tmpl" type="text/template">
+      <a href="#" class="play">Start The Player</a>
+    </script>
+
     <script id="queue-tmpl" type="text/template">
-      <div id="player-cont">
-        <a href="#" class="play">Start The Player</a>
-      </div>
+      <div id="player-cont"></div>
       <div class="queue">
         <h3>Queue</h3>
         <ol class="queue-list"></ol>
