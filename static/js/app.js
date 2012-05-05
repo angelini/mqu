@@ -1,7 +1,11 @@
 /*global _ Backbone jQuery Mustache io swfobject */
 
 var app = {
-    $main: (function() { return $('#main'); }())
+    room: null
+
+  , password: ""
+
+  , $main: (function() { return $('#main'); }())
 
   , module: (function() {
       var modules = {};
@@ -14,11 +18,23 @@ var app = {
     }())
 
   , socket: (function() {
-      var url = window.location.protocol + '//' + window.location.host;
       return io.connect();
     }())
 
-  , api: function(url, method, data, cb) {
+  , api: function() {
+      var args = Array.prototype.slice.call(arguments)
+        , cb = args.pop()
+        , url = args.shift()
+        , method = args.shift()
+        , data = args.shift() || null
+        , auth = args.shift() || false
+        ;
+
+      if (auth) {
+        if (data === null) { data = {}; }
+        data.auth = {room: app.room, password: app.password};
+      }
+
       var req = $.ajax({
           url: '/api/' + url
         , type: method
@@ -27,7 +43,14 @@ var app = {
       });
 
       req.done(cb);
-      req.fail(function() {
+      req.fail(function(err) {
+        if (err.status == 401) {
+          $('#passwordModal').on('hidden', function() {
+                               app.api(url, method, data, auth, cb);
+                             })
+                             .modal('show');
+        }
+
         console.log('API Request failed:', arguments);
       });
     }
@@ -62,10 +85,21 @@ var app = {
       playerCollection.fetch();
     }
 
-  , create: function(name) {
-      app.api('rooms', 'POST', {name: name}, function() {
+  , create: function(name, password) {
+      app.api('rooms', 'POST', {name: name, password: password}, function() {
         app.router.navigate('rooms/' + name, {trigger: true});
       });
+    }
+
+  , auth: function() {
+      var url = 'rooms/' + app.room + '/password';
+      app.api(url, 'POST', {password: app.password}, function(result) {
+        if (!result.res) {
+          console.log('password required');
+          return;
+        }
+      });
+
     }
 
   , init: function() {
@@ -135,7 +169,7 @@ var app = {
           , url = 'rooms/' + app.room + '/queue'
           ;
 
-        app.api(url, 'GET', null, function(info) {
+        app.api(url, 'GET', null, true, function(info) {
           that.locked = info.lock;
 
           var models = _.map(info.songs, function(song) {
@@ -293,8 +327,8 @@ var app = {
   });
 
   Menu.Collection = Backbone.Collection.extend({
-      create: function(name) {
-        app.create(name);
+      create: function(name, password) {
+        app.create(name, password);
       }
 
     , fetch: function() {
@@ -319,8 +353,11 @@ var app = {
 
     , create: function(ev) {
         ev.preventDefault();
-        var name = this.$el.find('input').val();
-        if (name) { this.collection.create(name); }
+        var name = this.$el.find('.room-name').val()
+          , password = this.$el.find('.room-pass').val()
+          ;
+
+        if (name) { this.collection.create(name, password); }
       }
 
     , render: function() {

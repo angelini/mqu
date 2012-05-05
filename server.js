@@ -1,4 +1,5 @@
 var tako = require('tako')
+  , url = require('url')
   , path = require('path')
   , redis = require('redis')
   , async = require('async')
@@ -34,6 +35,21 @@ var cat = function() {
   return response;
 };
 
+var auth = function(info, res, cb) {
+  if (!info || !info.room || info.password === undefined) { return sendErr(new Error('Fields Missing'), res); }
+
+  db.hget(cat(config.ROOMS, info.room), 'password', function(err, password) {
+    if (err) { return sendErr(err, res); }
+    if (password != info.password) {
+      res.statusCode = 401;
+      res.end();
+      return;
+    }
+
+    cb();
+  });
+};
+
 app.route('/static/*').files(path.join(__dirname, 'static'));
 
 app.route('/').file('./index.html');
@@ -48,16 +64,16 @@ app.route('/api/rooms')
     }
 
     if (req.method == 'POST') {
-      req.on('json', function(obj) {
-        if (!obj || !obj.name) { return sendErr(new Error('Fields Missing'), res); }
+      req.on('json', function(room) {
+        if (!room || !room.name) { return sendErr(new Error('Fields Missing'), res); }
 
-        db.sismember(config.ROOMS, obj.name, function(err, is) {
+        db.sismember(config.ROOMS, room.name, function(err, is) {
           if (err) { return sendErr(err, res); }
           if (is) { return sendErr(new Error('Name already in use'), res); }
 
           async.parallel([
-              function(cb) { db.hmset(cat(config.ROOMS, obj.name), obj, cb); }
-            , function(cb) { db.sadd(config.ROOMS, obj.name, cb); }
+              function(cb) { db.hmset(cat(config.ROOMS, room.name), room, cb); }
+            , function(cb) { db.sadd(config.ROOMS, room.name, cb); }
           ], function(err) {
             if (err) { return sendErr(err, res); }
             res.end();
@@ -83,19 +99,22 @@ app.route('/api/rooms/:name')
 app.route('/api/rooms/:name/queue')
   .json(function(req, res) {
     if (req.method == 'GET') {
-      var roomlock = false;
-      async.waterfall([
-          function(cb) { db.get(cat(config.ROOMS, req.params.name, config.LOCK), cb); }
-        , function(lock, cb) {
-            if (lock) { roomlock = true; }
-            db.lrange(cat(config.QUEUE, req.params.name), 0, -1, cb);
-          }
-        , function(ids, cb) {
-            async.map(ids, function(id, cb) { db.hgetall(cat(config.SONG, id), cb); }, cb);
-          }
-      ], function(err, songs) {
-        if (err) { return sendErr(err, res); }
-        res.end({songs: songs, lock: roomlock});
+      var data = JSON.parse(decodeURIComponent(url.parse(req.url).query));
+      auth(data.auth, res, function() {
+        var roomlock = false;
+        async.waterfall([
+            function(cb) { db.get(cat(config.ROOMS, req.params.name, config.LOCK), cb); }
+          , function(lock, cb) {
+              if (lock) { roomlock = true; }
+              db.lrange(cat(config.QUEUE, req.params.name), 0, -1, cb);
+            }
+          , function(ids, cb) {
+              async.map(ids, function(id, cb) { db.hgetall(cat(config.SONG, id), cb); }, cb);
+            }
+        ], function(err, songs) {
+          if (err) { return sendErr(err, res); }
+          res.end({songs: songs, lock: roomlock});
+        });
       });
     }
 
