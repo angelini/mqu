@@ -120,18 +120,19 @@ app.route('/api/rooms/:name/queue')
 
     if (req.method == 'POST') {
       req.on('json', function(song) {
-        if (!song) { return sendErr(new Error('Empty Body'), res); }
+        auth(song.auth, res, function() {
+          delete song.auth;
+          song.room = req.params.name;
+          song.id = uuid.v4();
 
-        song.room = req.params.name;
-        song.id = uuid.v4();
-
-        async.parallel([
-            function(cb) { db.rpush(cat(config.QUEUE, song.room), song.id, cb); }
-          , function(cb) { db.hmset(cat(config.SONG, song.id), song, cb); }
-        ], function(err) {
-          if (err) { return sendErr(err, res); }
-          events.emit('add', song);
-          res.end();
+          async.parallel([
+              function(cb) { db.rpush(cat(config.QUEUE, song.room), song.id, cb); }
+            , function(cb) { db.hmset(cat(config.SONG, song.id), song, cb); }
+          ], function(err) {
+            if (err) { return sendErr(err, res); }
+            events.emit('add', song);
+            res.end();
+          });
         });
       });
     }

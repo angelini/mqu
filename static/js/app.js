@@ -45,13 +45,21 @@ var app = {
       req.done(cb);
       req.fail(function(err) {
         if (err.status == 401) {
-          $('#passwordModal').on('hidden', function() {
-                               app.api(url, method, data, auth, cb);
-                             })
-                             .modal('show');
-        }
+          var Auth = app.module('auth')
+            , authView = new Auth.View({
+                model: new Auth.Model()
+              })
+            ;
 
-        console.log('API Request failed:', arguments);
+          app.$main.append(authView.render().el);
+          authView.modal().on('hidden', function() {
+                             app.api(url, method, data, auth, cb);
+                           })
+                          .modal('show')
+                          ;
+        } else {
+          console.log('API Request failed:', arguments);
+        }
       });
     }
 
@@ -117,6 +125,40 @@ var app = {
       menuCollection.fetch();
     }
 };
+
+(function(Auth) {
+
+  Auth.Model = Backbone.Model.extend({});
+
+  Auth.View = Backbone.View.extend({
+      events: {
+          'click a.btn-primary': 'enter'
+        , 'submit form': 'enter'
+      }
+
+    , enter: function(ev) {
+        ev.preventDefault();
+        app.password = this.$el.find('.password').val();
+        $('#authModal').modal('hide');
+      }
+
+    , modal: function() {
+        return $('#authModal');
+      }
+
+    , render: function() {
+        $('#authModal').remove();
+        this.$el.html(this.template);
+        return this;
+      }
+
+    , initialize: function() {
+        _.bindAll(this);
+        this.template = $('#auth-tmpl').html();
+      }
+  });
+
+}(app.module('auth')));
 
 (function(Player) {
 
@@ -248,7 +290,6 @@ var app = {
       }
 
     , renderPlayerCont: function() {
-        console.log('render player cont', this);
         if (this.collection.locked) {
           this.$el.find('#player-cont').html(this.lockedTmpl);
         } else {
@@ -385,7 +426,7 @@ var app = {
   Search.Model = Backbone.Model.extend({
     queue: function() {
       var url = 'rooms/' + app.room + '/queue';
-      app.api(url, 'POST', this.attributes, function() {});
+      app.api(url, 'POST', this.attributes, true, function() {});
     }
   });
 

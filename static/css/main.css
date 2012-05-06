@@ -20,9 +20,15 @@ body {
   color: rgb(120, 120, 120);
 }
 
+.menu .room-pass,
 .menu .room-name {
   width: 300px;
+  margin-right: 10px;
   margin-bottom: 0;
+}
+
+.menu .room-name {
+  margin-bottom: 10px;
 }
 
 .menu .rooms-list {
