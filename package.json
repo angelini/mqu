@@ -16,5 +16,6 @@
   "subdomain": "mqu",
   "scripts": {
     "start": "server.js"
-  }
+  },
+  "private": true
 }
