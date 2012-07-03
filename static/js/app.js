@@ -95,6 +95,7 @@ var app = {
 
   , create: function(name, password) {
       app.api('rooms', 'POST', {name: name, password: password}, function() {
+        app.password = password;
         app.router.navigate('rooms/' + name, {trigger: true});
       });
     }

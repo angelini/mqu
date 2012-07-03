@@ -9,8 +9,8 @@ var tako = require('tako')
 
   , events = new Events.EventEmitter()
   , db = redis.createClient(config.REDIS_PORT, config.REDIS_HOST)
-  , app = tako({ socketio: { 'log level': 1 } })
-  ;
+  , app = tako({ socketio: { 'log level': 1 } });
+
 
 if (process.env.NODE_ENV != 'dev') {
   db.auth(config.REDIS_PASS);
@@ -25,11 +25,11 @@ var sendErr = function(err, res, code) {
 var cat = function() {
   var i = 0
     , args = Array.prototype.slice.call(arguments)
-    , response = ''
-    ;
+    , response = '';
+
 
   for (i = 0; i < args.length; i++) {
-    response += args[i] + (i === (args.length - 1) ? '': config.SPLIT);
+    response += args[i] + (i === (args.length - 1) ? '' : config.SPLIT);
   }
 
   return response;
@@ -40,7 +40,7 @@ var auth = function(info, res, cb) {
 
   db.hget(cat(config.ROOMS, info.room), 'password', function(err, password) {
     if (err) { return sendErr(err, res); }
-    if (password != info.password) {
+    if (password !== "" && password != info.password) {
       res.statusCode = 401;
       res.end();
       return;
@@ -55,7 +55,7 @@ app.route('/static/*').files(path.join(__dirname, 'static'));
 app.route('/').file('./index.html');
 
 app.route('/api/rooms')
-  .json(function (req, res) {
+  .json(function(req, res) {
     if (req.method == 'GET') {
       db.smembers(config.ROOMS, function(err, rooms) {
         if (err) { return sendErr(err, res); }
@@ -82,19 +82,19 @@ app.route('/api/rooms')
       });
     }
   })
-  .methods('GET', 'POST')
-  ;
+  .methods('GET', 'POST');
+
 
 app.route('/api/rooms/:name')
-  .json(function (req, res) {
+  .json(function(req, res) {
     db.hgetall(cat(config.ROOMS, req.params.name), function(err, room) {
       if (err) { return sendErr(err, res); }
       if (!room) { return sendErr(err, res, 404); }
       res.end(room);
     });
   })
-  .methods('GET')
-  ;
+  .methods('GET');
+
 
 app.route('/api/rooms/:name/queue')
   .json(function(req, res) {
@@ -152,8 +152,8 @@ app.route('/api/rooms/:name/queue')
       });
     }
   })
-  .methods('GET', 'POST', 'DELETE')
-  ;
+  .methods('GET', 'POST', 'DELETE');
+
 
 app.sockets.on('connection', function(socket) {
   var add = function(song) {
@@ -170,7 +170,7 @@ app.sockets.on('connection', function(socket) {
           }
         });
       }
-    ;
+;
 
   events.on('add', add);
   events.on('remove', remove);
