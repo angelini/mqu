@@ -1,7 +1,7 @@
 {
   "name": "mqu",
   "description": "A simple Youtube music queue",
-  "version": "0.0.2-2",
+  "version": "0.0.2-4",
   "author": "Alex Angelini <alex.louis.angelini@gmail.com>",
   "main": "server",
   "dependencies": {
@@ -17,5 +17,8 @@
   "private": true,
   "engines": {
     "node": "0.6.x"
-  }
+  },
+  "domains": [
+    "mqu.me"
+  ]
 }
